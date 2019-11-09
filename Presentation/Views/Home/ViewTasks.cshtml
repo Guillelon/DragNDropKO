@@ -1,0 +1,194 @@
+﻿@model IList<DAL.Models.TaskEntry>
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success" role="alert">
+        @ViewBag.SuccessMessage
+    </div>
+}
+<div class="page-header">
+    <div class="row">
+        <div class="col-10">
+            <h4 style="margin-top: 0px">
+                All Tasks
+            </h4>
+        </div>
+        <div class="col-2" style="text-align:center">
+            <a class="btn btn-default" style="border: solid" href="/Home/Index">Back</a>
+        </div>
+    </div>
+</div>
+
+<hr />
+<div class="alert alert-warning" role="alert" data-bind="visible: ShowError">
+    <text data-bind="text: ErrorMessage"></text>
+</div>
+<div class="input-group mb-3">
+    <input type="text" data-bind="value: NewTaskName, valueUpdate: 'afterkeydown', event: { keypress: searchKeyboardCmd }" class="form-control">
+    <div class="input-group-append">
+        <button class="btn btn-info" data-bind="click: AddTask" type="button">Quick Save</button>
+    </div>
+</div>
+<table class="table table-bordered" style="margin-top: 25px">
+    <thead>
+        <tr>
+            <th>
+                Task Name
+            </th>
+            <th>
+                Due Date
+            </th>
+            <th>
+                Completed
+            </th>
+        </tr>
+    </thead>
+    <tbody data-bind="template: { name: 'taskRows', foreach: Tasks }, sortableList: Tasks"></tbody>
+</table>
+<br />
+<br />
+
+<script id="taskRows" type="text/html">
+    <tr style="cursor: move;" data-bind="attr: { id: Id }">
+        <td>
+            <a data-bind="text: $data.Name, attr: { href: EditUrl }">
+
+            </a>
+        </td>
+        <td data-bind="text: DueDate"></td>
+        <td style="text-align:center">
+            <div class="checkbox">
+                <label style="padding-left:0px">
+                    <input class="input-checkbox" data-bind="checked: Completed, click: $parent.CheckAction" type="checkbox" />
+                    <span class="cr"><i class="cr-icon fa fa-check"></i></span>
+                </label>
+            </div>
+        </td>
+    </tr>
+</script>
+
+<script>
+    function TasksDashboard() {
+        var self = this;
+        self.Tasks = ko.observableArray();
+        self.NewTaskName = ko.observable();
+        self.ShowError = ko.observable(false);
+        self.ErrorMessage = ko.observable();
+
+        self.searchKeyboardCmd = function (data, event) {
+            if (event.keyCode == 13) {
+                self.AddTask();
+            }
+            return true;
+        }
+
+        self.ShowErrorMessage = function (message) {
+            self.ErrorMessage(message);
+            self.ShowError(true);
+        }
+
+        self.AddTask = function () {
+            var name = self.NewTaskName();
+            if (name != null && name.length > 0) {
+                self.ShowError(false);
+                $.ajax({
+                    cache: false,
+                    url: '/Home/AddNewTask?name=' + name,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        self.NewTaskName('');
+                        self.GetData();
+                        window.scrollTo(0,document.body.scrollHeight);
+                    }
+                });
+            }
+            else {
+                self.ShowErrorMessage("Name field mandatory!");
+            }
+        }
+
+        self.GetData = function () {
+            $.ajax({
+                cache: false,
+                url: '/Home/GetTasks',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    self.Tasks([]);
+                    for (var i = 0; i < data.length; i++) {
+                        self.Tasks.push(new Task(data[i]));
+                    }
+                }
+            });
+        }
+
+        self.CheckAction = function (element) {
+            var id = element.Id();
+            $.ajax({
+                url: '/Home/ChangeTaskStatus?id=' + id,
+                type: 'GET',
+                success: function (data) {
+
+                }
+            });
+            return true;
+        }
+
+        //connect items with observableArrays
+        ko.bindingHandlers.sortableList = {
+            init: function (element, valueAccessor) {
+                var list = valueAccessor();
+                $(element).sortable({
+                    start: function (event, ui) {
+                    },
+                    update: function (event, ui) {
+                        //retrieve our actual data item
+                        var item = ui.item.tmplItem().data;
+                        //figure out its new position
+                        var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                        //remove the item and add it back in the right spot
+                        if (position >= 0) {
+                            list.remove(item);
+                            list.splice(position, 0, item);
+                        }
+                        ui.item.remove();
+                        var id = ui.item[0].id;
+                        $.ajax({
+                            url: '/Home/ChangeTaskOrder?id=' + id + '&newOrder=' + position,
+                            type: 'GET',
+                            success: function (data) {
+                                self.GetData();
+                            }
+                        });
+                    }
+                });
+            }
+        };
+
+        //control visibility, give element focus, and select the contents (in order)
+        ko.bindingHandlers.visibleAndSelect = {
+            update: function (element, valueAccessor) {
+                ko.bindingHandlers.visible.update(element, valueAccessor);
+                if (valueAccessor()) {
+                    setTimeout(function () {
+                        $(element).focus().select();
+                        console.log($(element));
+                    }, 0); //new tasks are not in DOM yet
+                }
+            }
+        }
+    }
+
+    function Task(data) {
+        var self = this;
+        self.Id = ko.observable(data.Id);
+        self.Name = ko.observable(data.Name);
+        self.DueDate = ko.observable(data.DueDateFormated);
+        self.Completed = ko.observable(data.Completed);
+        self.EditUrl = ko.observable('/Home/EditTask/' + data.Id);
+    }
+
+    var taskDashboard = new TasksDashboard();
+    ko.applyBindings(taskDashboard);
+    taskDashboard.GetData();
+</script>

@@ -1,0 +1,49 @@
+﻿@model DAL.Models.TaskEntry
+<div class="page-header">
+    <div class="row">
+        <div class="col-10">
+            <h4 style="margin-top: 0px">
+                Add a new Task...
+            </h4>
+        </div>
+        <div class="col-2">
+            <a class="btn btn-default" style="border: solid" href="/Home/ViewTasks">Back</a>
+        </div>
+    </div>
+</div>
+<hr />
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @ViewBag.ErrorMessage
+    </div>
+}
+<div>
+    @using (Html.BeginForm("AddTask", "Home", null, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.CreatedDate)
+
+        <div class="form-group">
+            <label class="col-md-2 control-label">Task Name</label>
+            <div class="col-md-5">
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-md-2 control-label">Due Date</label>
+            <div class="col-md-5">
+                @Html.TextBoxFor(m => m.DueDate, new { @id = "dueDate", @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <button type="submit" class="btn btn-info">Add Task</button>
+            </div>
+        </div>
+    }
+</div>
+<script>
+    $('#dueDate').datetimepicker({ format: 'MM/DD/YYYY', minDate: moment() });
+</script>

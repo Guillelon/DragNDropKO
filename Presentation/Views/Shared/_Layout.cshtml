@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field2Base Test</title>
+    <link href="~/Images/FavIcon.ico" rel="shortcut icon" type="image/x-icon" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/modernizr")
+    <script src="https://use.fontawesome.com/d9e4c11bf1.js"></script>
+    <script src="~/Scripts/jquery.tmpl.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+            crossorigin="anonymous"></script>
+    <script src="~/Scripts/knockout-3.4.0.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-default navbar-fixed-top" id="main-header">
+            <div class="container container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand top-logo" id="logo" href="/Home/Index">
+                        <img id="logoImage" width="215" src="/Images/Logo.png" class="img-responsive" alt="Field2Base" />
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container body-content">
+        <div class="card">
+            <div class="card-body">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</body>
+</html>
